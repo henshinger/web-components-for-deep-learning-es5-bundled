@@ -37,7 +37,7 @@
 /* eslint-disable indent, no-unused-vars, no-multiple-empty-lines, max-nested-callbacks, space-before-function-paren, quotes, comma-spacing */
 'use strict';
 
-var precacheConfig = [["bower_components/webcomponentsjs/gulpfile.js","0366da1f0f7858c9af2daa3ef7d950ea"],["bower_components/webcomponentsjs/webcomponents-hi-ce.js","ac506890cf3f0f8ef4017398fa4034a0"],["bower_components/webcomponentsjs/webcomponents-hi-sd-ce.js","c53b10e1469a4d6b1108cd5ec995875b"],["bower_components/webcomponentsjs/webcomponents-hi.js","b88ce284fda849097ab4997d97bfc8b6"],["bower_components/webcomponentsjs/webcomponents-lite.js","fc5fd8d2c8b27139307536abb8aecda7"],["bower_components/webcomponentsjs/webcomponents-sd-ce.js","b4daa8feea009da29844c0ceffde61dd"],["index.html","6ee410f2f2463944301c282603a55c3f"],["manifest.json","6d9c557309903d40c447a3df55c9005a"]];
+var precacheConfig = [["bower_components/webcomponentsjs/gulpfile.js","0366da1f0f7858c9af2daa3ef7d950ea"],["bower_components/webcomponentsjs/webcomponents-hi-ce.js","ac506890cf3f0f8ef4017398fa4034a0"],["bower_components/webcomponentsjs/webcomponents-hi-sd-ce.js","c53b10e1469a4d6b1108cd5ec995875b"],["bower_components/webcomponentsjs/webcomponents-hi.js","b88ce284fda849097ab4997d97bfc8b6"],["bower_components/webcomponentsjs/webcomponents-lite.js","fc5fd8d2c8b27139307536abb8aecda7"],["bower_components/webcomponentsjs/webcomponents-sd-ce.js","b4daa8feea009da29844c0ceffde61dd"],["index.html","4480c0a9ec0b7f86cc680b683266edca"],["manifest.json","6d9c557309903d40c447a3df55c9005a"]];
 var cacheName = 'sw-precache-v3--' + (self.registration ? self.registration.scope : '');
 
 
