@@ -1,0 +1,730 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer-element.html"><link rel="import" href="../bower_components/iron-icons/iron-icons.html"><link rel="import" href="../bower_components/paper-fab/paper-fab.html"><link rel="import" href="../bower_components/prism-element/demo/prism-demo.html"><link rel="import" href="shared-styles.html"><link rel="import" href="my-view2.html"></head><body><dom-module id="slide-show"><template><style include="shared-styles">:host{display:flex;flex-direction:row;min-height:100vh;overflow-x:hidden;font-size:1.5em;align-items:flex-start;}.slide{padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:95vw;width:100vw;min-height:100vh;flex:0 0 auto;flex-wrap:wrap;}.header{font-size:2.5em;text-align:center;color:var(--paper-pink-500);}.nav-buttons{position:fixed;bottom:10px;display:flex;margin:auto;right:10px;}.nav-buttons paper-fab{position:relative;flex-direction:row;align-items:center;justify-content:center;margin:5px;}.card{max-width:80%;flex-wrap:wrap;}.card pre{white-space:pre-wrap;word-wrap:normal;}</style><div class="slide"><div class="card"><h1 class="header">Web Components For Deep Learning</h1></div></div><div class="slide"><div class="card"><h1 class="header">Before We Begin</h1></div></div><div class="slide"><div class="card"><h1 class="header">This is not a talk focused on Deep Learning</h1></div></div><div class="slide"><div class="card"><h1 class="header">What we'll focus on</h1></div><div class="card"><ul><li>It’s about <u>deploying</u> deep learning models to the browser</li><li>Avenue to learn more about Polymer</li><li>Scratch the surface of Neural networks and finetuning to keep everyone on the same page</li></ul></div></div><div class="slide"><div class="card"><h1 class="header">What We'll Achieve</h1></div></div><div class="slide"><div class="card"><a href="http://make.girls.moe" target="_blank"><img src="lib/images/make-girls-moe.png"></a></div></div><div class="slide"><div class="card"><h1 class="header">What's possible now</h1></div><div class="card"><ul><li>Deploying a deep learning model in the browser</li><li>At a reasonable performance</li><li>For your own purposes(e.g. Not Hotdog building a custom model over using Google Cloud)</li></ul></div></div><div class="slide"><div class="card"><h1 class="header">Demo project</h1></div><div class="card"><ul><li>Anime imageboard</li><li>Detects if an image is not an anime</li><li>Post only if it is truly anime</li></ul></div></div><div class="slide"><div class="card"><h1 class="header">How to Distinguish between Anime and Real Images</h1></div><div class="card"><img src="lib/images/zz.png"></div></div><div class="slide"><div class="card"><h1 class="header">Neural Networks</h1></div><div class="card"><img src="lib/images/neural-nets.png"></div></div><div class="slide"><div class="card"><h1 class="header">Neural Networks</h1></div><div class="card"><img src="lib/images/neural-nets-numbers.jpg"></div></div><div class="slide"><div class="card"><h1 class="header">Perceptron</h1></div><div class="card"><img src="lib/images/perceptron.png"></div></div><div class="slide"><div class="card"><h1 class="header">Neural Networks</h1></div><div class="card"><img src="lib/images/neural-nets.png"></div></div><div class="slide"><div class="card"><h1 class="header">Deep Learning</h1></div><div class="card"><img src="lib/images/deep-network.jpeg"></div></div><div class="slide"><div class="card"><h1 class="header">Fine-Tuning</h1></div><div class="card"><img src="lib/images/fine-tuning.jpg"></div></div><div class="slide"><div class="card"><h1 class="header">Tensorflow</h1></div><div class="card"><blockquote>TensorFlow™ is an open source software library for numerical computation using data flow graphs. Nodes in the graph represent mathematical operations, while the graph edges represent the multidimensional data arrays (tensors) communicated between them. The flexible architecture allows you to deploy computation to one or more CPUs or GPUs in a desktop, server, or mobile device with a single API</blockquote></div></div><div class="slide"><div class="card"><h1 class="header">Tensorflow Visualized</h1></div><div class="card"><img src="lib/images/tensors_flowing.gif"></div></div><div class="slide"><div class="card"><h1 class="header">Keras</h1></div><div class="card"><blockquote>Keras is a high-level neural networks API, written in Python and capable of running on top of TensorFlow, CNTK, or Theano. It was developed with a focus on enabling fast experimentation. Being able to go from idea to result with the least possible delay is key to doing good research.</blockquote></div></div><div class="slide"><div class="card"><h1 class="header">Show Me The Code</h1></div></div><div class="slide"><div class="card"><h1 class="header">But First</h1></div><div class="card"><img src="lib/images/train_test_validation.png"></div><div class="card"><img src="lib/images/ml_classes.png"></div><div class="card"><img src="lib/images/class_0.png"></div><div class="card"><img src="lib/images/class_1.png"></div></div><div class="slide"><div class="card"><h1 class="header">Import all the libraries</h1></div><div class="card"><prism-demo code="import pandas as pd
+import numpy as np
+from keras.preprocessing.image import ImageDataGenerator
+from keras.applications.xception import Xception
+from keras.preprocessing import image
+from keras.models import Model
+from keras.layers import Dense, GlobalAveragePooling2D, Flatten, GlobalMaxPooling2D, Dropout
+from keras import backend as K
+from keras_vggface.vggface import VGGFace
+from keras.callbacks import ModelCheckpoint
+from keras.applications import resnet50, VGG16
+from keras_squeezenet import SqueezeNet
+from keras.models import load_model"></prism-demo></div></div><div class="slide"><div class="card"><h1 class="header">Generate Images from Directories</h1></div><div class="card"><prism-demo code="train_datagen = ImageDataGenerator(
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True)
+validation_datagen = ImageDataGenerator()
+test_datagen = ImageDataGenerator(
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True)
+train_generator = train_datagen.flow_from_directory(
+        &quot;../input/anime/train&quot;,
+        target_size=(224, 224),
+        batch_size=64,
+        class_mode=&quot;binary&quot;)
+validation_generator = validation_datagen.flow_from_directory(
+        &quot;../input/anime/validation&quot;,        
+        target_size=(224, 224),
+        batch_size=64,
+        class_mode=&quot;binary&quot;)
+test_generator = test_datagen.flow_from_directory(
+        &quot;../input/anime/test&quot;,        
+        target_size=(224, 224),
+        batch_size=64,
+        class_mode=&quot;binary&quot;)"></prism-demo></div><div class="card"><p>Found 3771 images belonging to 2 classes.</p><p>Found 614 images belonging to 2 classes.</p><p>Found 536 images belonging to 2 classes.</p></div></div><div class="slide"><div class="card"><h1 class="header">Train the model</h1></div><div class="card"><prism-demo code="base_model = resnet50.ResNet50(weights='imagenet', include_top=False, pooling=
+avg')
+x = base_model.output
+predictions = Dense(1, activation='sigmoid')(x)
+model = Model(inputs=base_model.input, outputs=predictions)
+
+for layer in base_model.layers:
+    layer.trainable = False
+
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[
+accuracy'])
+checkpointer = ModelCheckpoint(filepath='../input/anime_weights.h5', verbose=1, save_best_only=True)
+
+print(model.summary())
+
+model.fit_generator(
+        train_generator,
+        steps_per_epoch=60,
+        epochs=3,
+        validation_data=validation_generator,
+        validation_steps=10, 
+        callbacks=[checkpointer])"></prism-demo></div><div class="card"><pre>____________________________________________________________________________________________________
+Layer (type)                     Output Shape          Param #     Connected to                     
+====================================================================================================
+input_1 (InputLayer)             (None, None, None, 3) 0                                            
+____________________________________________________________________________________________________
+zero_padding2d_1 (ZeroPadding2D) (None, None, None, 3) 0           input_1[0][0]                    
+____________________________________________________________________________________________________
+conv1 (Conv2D)                   (None, None, None, 64 9472        zero_padding2d_1[0][0]           
+____________________________________________________________________________________________________
+bn_conv1 (BatchNormalization)    (None, None, None, 64 256         conv1[0][0]                      
+____________________________________________________________________________________________________
+activation_1 (Activation)        (None, None, None, 64 0           bn_conv1[0][0]                   
+____________________________________________________________________________________________________
+max_pooling2d_1 (MaxPooling2D)   (None, None, None, 64 0           activation_1[0][0]               
+____________________________________________________________________________________________________
+res2a_branch2a (Conv2D)          (None, None, None, 64 4160        max_pooling2d_1[0][0]            
+____________________________________________________________________________________________________
+bn2a_branch2a (BatchNormalizatio (None, None, None, 64 256         res2a_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_2 (Activation)        (None, None, None, 64 0           bn2a_branch2a[0][0]              
+____________________________________________________________________________________________________
+res2a_branch2b (Conv2D)          (None, None, None, 64 36928       activation_2[0][0]               
+____________________________________________________________________________________________________
+bn2a_branch2b (BatchNormalizatio (None, None, None, 64 256         res2a_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_3 (Activation)        (None, None, None, 64 0           bn2a_branch2b[0][0]              
+____________________________________________________________________________________________________
+res2a_branch2c (Conv2D)          (None, None, None, 25 16640       activation_3[0][0]               
+____________________________________________________________________________________________________
+res2a_branch1 (Conv2D)           (None, None, None, 25 16640       max_pooling2d_1[0][0]            
+____________________________________________________________________________________________________
+bn2a_branch2c (BatchNormalizatio (None, None, None, 25 1024        res2a_branch2c[0][0]             
+____________________________________________________________________________________________________
+bn2a_branch1 (BatchNormalization (None, None, None, 25 1024        res2a_branch1[0][0]              
+____________________________________________________________________________________________________
+add_1 (Add)                      (None, None, None, 25 0           bn2a_branch2c[0][0]              
+                                                                   bn2a_branch1[0][0]               
+____________________________________________________________________________________________________
+activation_4 (Activation)        (None, None, None, 25 0           add_1[0][0]                      
+____________________________________________________________________________________________________
+res2b_branch2a (Conv2D)          (None, None, None, 64 16448       activation_4[0][0]               
+____________________________________________________________________________________________________
+bn2b_branch2a (BatchNormalizatio (None, None, None, 64 256         res2b_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_5 (Activation)        (None, None, None, 64 0           bn2b_branch2a[0][0]              
+____________________________________________________________________________________________________
+res2b_branch2b (Conv2D)          (None, None, None, 64 36928       activation_5[0][0]               
+____________________________________________________________________________________________________
+bn2b_branch2b (BatchNormalizatio (None, None, None, 64 256         res2b_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_6 (Activation)        (None, None, None, 64 0           bn2b_branch2b[0][0]              
+____________________________________________________________________________________________________
+res2b_branch2c (Conv2D)          (None, None, None, 25 16640       activation_6[0][0]               
+____________________________________________________________________________________________________
+bn2b_branch2c (BatchNormalizatio (None, None, None, 25 1024        res2b_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_2 (Add)                      (None, None, None, 25 0           bn2b_branch2c[0][0]              
+                                                                   activation_4[0][0]               
+____________________________________________________________________________________________________
+activation_7 (Activation)        (None, None, None, 25 0           add_2[0][0]                      
+____________________________________________________________________________________________________
+res2c_branch2a (Conv2D)          (None, None, None, 64 16448       activation_7[0][0]               
+____________________________________________________________________________________________________
+bn2c_branch2a (BatchNormalizatio (None, None, None, 64 256         res2c_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_8 (Activation)        (None, None, None, 64 0           bn2c_branch2a[0][0]              
+____________________________________________________________________________________________________
+res2c_branch2b (Conv2D)          (None, None, None, 64 36928       activation_8[0][0]               
+____________________________________________________________________________________________________
+bn2c_branch2b (BatchNormalizatio (None, None, None, 64 256         res2c_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_9 (Activation)        (None, None, None, 64 0           bn2c_branch2b[0][0]              
+____________________________________________________________________________________________________
+res2c_branch2c (Conv2D)          (None, None, None, 25 16640       activation_9[0][0]               
+____________________________________________________________________________________________________
+bn2c_branch2c (BatchNormalizatio (None, None, None, 25 1024        res2c_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_3 (Add)                      (None, None, None, 25 0           bn2c_branch2c[0][0]              
+                                                                   activation_7[0][0]               
+____________________________________________________________________________________________________
+activation_10 (Activation)       (None, None, None, 25 0           add_3[0][0]                      
+____________________________________________________________________________________________________
+res3a_branch2a (Conv2D)          (None, None, None, 12 32896       activation_10[0][0]              
+____________________________________________________________________________________________________
+bn3a_branch2a (BatchNormalizatio (None, None, None, 12 512         res3a_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_11 (Activation)       (None, None, None, 12 0           bn3a_branch2a[0][0]              
+____________________________________________________________________________________________________
+res3a_branch2b (Conv2D)          (None, None, None, 12 147584      activation_11[0][0]              
+____________________________________________________________________________________________________
+bn3a_branch2b (BatchNormalizatio (None, None, None, 12 512         res3a_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_12 (Activation)       (None, None, None, 12 0           bn3a_branch2b[0][0]              
+____________________________________________________________________________________________________
+res3a_branch2c (Conv2D)          (None, None, None, 51 66048       activation_12[0][0]              
+____________________________________________________________________________________________________
+res3a_branch1 (Conv2D)           (None, None, None, 51 131584      activation_10[0][0]              
+____________________________________________________________________________________________________
+bn3a_branch2c (BatchNormalizatio (None, None, None, 51 2048        res3a_branch2c[0][0]             
+____________________________________________________________________________________________________
+bn3a_branch1 (BatchNormalization (None, None, None, 51 2048        res3a_branch1[0][0]              
+____________________________________________________________________________________________________
+add_4 (Add)                      (None, None, None, 51 0           bn3a_branch2c[0][0]              
+                                                                   bn3a_branch1[0][0]               
+____________________________________________________________________________________________________
+activation_13 (Activation)       (None, None, None, 51 0           add_4[0][0]                      
+____________________________________________________________________________________________________
+res3b_branch2a (Conv2D)          (None, None, None, 12 65664       activation_13[0][0]              
+____________________________________________________________________________________________________
+bn3b_branch2a (BatchNormalizatio (None, None, None, 12 512         res3b_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_14 (Activation)       (None, None, None, 12 0           bn3b_branch2a[0][0]              
+____________________________________________________________________________________________________
+res3b_branch2b (Conv2D)          (None, None, None, 12 147584      activation_14[0][0]              
+____________________________________________________________________________________________________
+bn3b_branch2b (BatchNormalizatio (None, None, None, 12 512         res3b_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_15 (Activation)       (None, None, None, 12 0           bn3b_branch2b[0][0]              
+____________________________________________________________________________________________________
+res3b_branch2c (Conv2D)          (None, None, None, 51 66048       activation_15[0][0]              
+____________________________________________________________________________________________________
+bn3b_branch2c (BatchNormalizatio (None, None, None, 51 2048        res3b_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_5 (Add)                      (None, None, None, 51 0           bn3b_branch2c[0][0]              
+                                                                   activation_13[0][0]              
+____________________________________________________________________________________________________
+activation_16 (Activation)       (None, None, None, 51 0           add_5[0][0]                      
+____________________________________________________________________________________________________
+res3c_branch2a (Conv2D)          (None, None, None, 12 65664       activation_16[0][0]              
+____________________________________________________________________________________________________
+bn3c_branch2a (BatchNormalizatio (None, None, None, 12 512         res3c_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_17 (Activation)       (None, None, None, 12 0           bn3c_branch2a[0][0]              
+____________________________________________________________________________________________________
+res3c_branch2b (Conv2D)          (None, None, None, 12 147584      activation_17[0][0]              
+____________________________________________________________________________________________________
+bn3c_branch2b (BatchNormalizatio (None, None, None, 12 512         res3c_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_18 (Activation)       (None, None, None, 12 0           bn3c_branch2b[0][0]              
+____________________________________________________________________________________________________
+res3c_branch2c (Conv2D)          (None, None, None, 51 66048       activation_18[0][0]              
+____________________________________________________________________________________________________
+bn3c_branch2c (BatchNormalizatio (None, None, None, 51 2048        res3c_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_6 (Add)                      (None, None, None, 51 0           bn3c_branch2c[0][0]              
+                                                                   activation_16[0][0]              
+____________________________________________________________________________________________________
+activation_19 (Activation)       (None, None, None, 51 0           add_6[0][0]                      
+____________________________________________________________________________________________________
+res3d_branch2a (Conv2D)          (None, None, None, 12 65664       activation_19[0][0]              
+____________________________________________________________________________________________________
+bn3d_branch2a (BatchNormalizatio (None, None, None, 12 512         res3d_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_20 (Activation)       (None, None, None, 12 0           bn3d_branch2a[0][0]              
+____________________________________________________________________________________________________
+res3d_branch2b (Conv2D)          (None, None, None, 12 147584      activation_20[0][0]              
+____________________________________________________________________________________________________
+bn3d_branch2b (BatchNormalizatio (None, None, None, 12 512         res3d_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_21 (Activation)       (None, None, None, 12 0           bn3d_branch2b[0][0]              
+____________________________________________________________________________________________________
+res3d_branch2c (Conv2D)          (None, None, None, 51 66048       activation_21[0][0]              
+____________________________________________________________________________________________________
+bn3d_branch2c (BatchNormalizatio (None, None, None, 51 2048        res3d_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_7 (Add)                      (None, None, None, 51 0           bn3d_branch2c[0][0]              
+                                                                   activation_19[0][0]              
+____________________________________________________________________________________________________
+activation_22 (Activation)       (None, None, None, 51 0           add_7[0][0]                      
+____________________________________________________________________________________________________
+res4a_branch2a (Conv2D)          (None, None, None, 25 131328      activation_22[0][0]              
+____________________________________________________________________________________________________
+bn4a_branch2a (BatchNormalizatio (None, None, None, 25 1024        res4a_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_23 (Activation)       (None, None, None, 25 0           bn4a_branch2a[0][0]              
+____________________________________________________________________________________________________
+res4a_branch2b (Conv2D)          (None, None, None, 25 590080      activation_23[0][0]              
+____________________________________________________________________________________________________
+bn4a_branch2b (BatchNormalizatio (None, None, None, 25 1024        res4a_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_24 (Activation)       (None, None, None, 25 0           bn4a_branch2b[0][0]              
+____________________________________________________________________________________________________
+res4a_branch2c (Conv2D)          (None, None, None, 10 263168      activation_24[0][0]              
+____________________________________________________________________________________________________
+res4a_branch1 (Conv2D)           (None, None, None, 10 525312      activation_22[0][0]              
+____________________________________________________________________________________________________
+bn4a_branch2c (BatchNormalizatio (None, None, None, 10 4096        res4a_branch2c[0][0]             
+____________________________________________________________________________________________________
+bn4a_branch1 (BatchNormalization (None, None, None, 10 4096        res4a_branch1[0][0]              
+____________________________________________________________________________________________________
+add_8 (Add)                      (None, None, None, 10 0           bn4a_branch2c[0][0]              
+                                                                   bn4a_branch1[0][0]               
+____________________________________________________________________________________________________
+activation_25 (Activation)       (None, None, None, 10 0           add_8[0][0]                      
+____________________________________________________________________________________________________
+res4b_branch2a (Conv2D)          (None, None, None, 25 262400      activation_25[0][0]              
+____________________________________________________________________________________________________
+bn4b_branch2a (BatchNormalizatio (None, None, None, 25 1024        res4b_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_26 (Activation)       (None, None, None, 25 0           bn4b_branch2a[0][0]              
+____________________________________________________________________________________________________
+res4b_branch2b (Conv2D)          (None, None, None, 25 590080      activation_26[0][0]              
+____________________________________________________________________________________________________
+bn4b_branch2b (BatchNormalizatio (None, None, None, 25 1024        res4b_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_27 (Activation)       (None, None, None, 25 0           bn4b_branch2b[0][0]              
+____________________________________________________________________________________________________
+res4b_branch2c (Conv2D)          (None, None, None, 10 263168      activation_27[0][0]              
+____________________________________________________________________________________________________
+bn4b_branch2c (BatchNormalizatio (None, None, None, 10 4096        res4b_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_9 (Add)                      (None, None, None, 10 0           bn4b_branch2c[0][0]              
+                                                                   activation_25[0][0]              
+____________________________________________________________________________________________________
+activation_28 (Activation)       (None, None, None, 10 0           add_9[0][0]                      
+____________________________________________________________________________________________________
+res4c_branch2a (Conv2D)          (None, None, None, 25 262400      activation_28[0][0]              
+____________________________________________________________________________________________________
+bn4c_branch2a (BatchNormalizatio (None, None, None, 25 1024        res4c_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_29 (Activation)       (None, None, None, 25 0           bn4c_branch2a[0][0]              
+____________________________________________________________________________________________________
+res4c_branch2b (Conv2D)          (None, None, None, 25 590080      activation_29[0][0]              
+____________________________________________________________________________________________________
+bn4c_branch2b (BatchNormalizatio (None, None, None, 25 1024        res4c_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_30 (Activation)       (None, None, None, 25 0           bn4c_branch2b[0][0]              
+____________________________________________________________________________________________________
+res4c_branch2c (Conv2D)          (None, None, None, 10 263168      activation_30[0][0]              
+____________________________________________________________________________________________________
+bn4c_branch2c (BatchNormalizatio (None, None, None, 10 4096        res4c_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_10 (Add)                     (None, None, None, 10 0           bn4c_branch2c[0][0]              
+                                                                   activation_28[0][0]              
+____________________________________________________________________________________________________
+activation_31 (Activation)       (None, None, None, 10 0           add_10[0][0]                     
+____________________________________________________________________________________________________
+res4d_branch2a (Conv2D)          (None, None, None, 25 262400      activation_31[0][0]              
+____________________________________________________________________________________________________
+bn4d_branch2a (BatchNormalizatio (None, None, None, 25 1024        res4d_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_32 (Activation)       (None, None, None, 25 0           bn4d_branch2a[0][0]              
+____________________________________________________________________________________________________
+res4d_branch2b (Conv2D)          (None, None, None, 25 590080      activation_32[0][0]              
+____________________________________________________________________________________________________
+bn4d_branch2b (BatchNormalizatio (None, None, None, 25 1024        res4d_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_33 (Activation)       (None, None, None, 25 0           bn4d_branch2b[0][0]              
+____________________________________________________________________________________________________
+res4d_branch2c (Conv2D)          (None, None, None, 10 263168      activation_33[0][0]              
+____________________________________________________________________________________________________
+bn4d_branch2c (BatchNormalizatio (None, None, None, 10 4096        res4d_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_11 (Add)                     (None, None, None, 10 0           bn4d_branch2c[0][0]              
+                                                                   activation_31[0][0]              
+____________________________________________________________________________________________________
+activation_34 (Activation)       (None, None, None, 10 0           add_11[0][0]                     
+____________________________________________________________________________________________________
+res4e_branch2a (Conv2D)          (None, None, None, 25 262400      activation_34[0][0]              
+____________________________________________________________________________________________________
+bn4e_branch2a (BatchNormalizatio (None, None, None, 25 1024        res4e_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_35 (Activation)       (None, None, None, 25 0           bn4e_branch2a[0][0]              
+____________________________________________________________________________________________________
+res4e_branch2b (Conv2D)          (None, None, None, 25 590080      activation_35[0][0]              
+____________________________________________________________________________________________________
+bn4e_branch2b (BatchNormalizatio (None, None, None, 25 1024        res4e_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_36 (Activation)       (None, None, None, 25 0           bn4e_branch2b[0][0]              
+____________________________________________________________________________________________________
+res4e_branch2c (Conv2D)          (None, None, None, 10 263168      activation_36[0][0]              
+____________________________________________________________________________________________________
+bn4e_branch2c (BatchNormalizatio (None, None, None, 10 4096        res4e_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_12 (Add)                     (None, None, None, 10 0           bn4e_branch2c[0][0]              
+                                                                   activation_34[0][0]              
+____________________________________________________________________________________________________
+activation_37 (Activation)       (None, None, None, 10 0           add_12[0][0]                     
+____________________________________________________________________________________________________
+res4f_branch2a (Conv2D)          (None, None, None, 25 262400      activation_37[0][0]              
+____________________________________________________________________________________________________
+bn4f_branch2a (BatchNormalizatio (None, None, None, 25 1024        res4f_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_38 (Activation)       (None, None, None, 25 0           bn4f_branch2a[0][0]              
+____________________________________________________________________________________________________
+res4f_branch2b (Conv2D)          (None, None, None, 25 590080      activation_38[0][0]              
+____________________________________________________________________________________________________
+bn4f_branch2b (BatchNormalizatio (None, None, None, 25 1024        res4f_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_39 (Activation)       (None, None, None, 25 0           bn4f_branch2b[0][0]              
+____________________________________________________________________________________________________
+res4f_branch2c (Conv2D)          (None, None, None, 10 263168      activation_39[0][0]              
+____________________________________________________________________________________________________
+bn4f_branch2c (BatchNormalizatio (None, None, None, 10 4096        res4f_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_13 (Add)                     (None, None, None, 10 0           bn4f_branch2c[0][0]              
+                                                                   activation_37[0][0]              
+____________________________________________________________________________________________________
+activation_40 (Activation)       (None, None, None, 10 0           add_13[0][0]                     
+____________________________________________________________________________________________________
+res5a_branch2a (Conv2D)          (None, None, None, 51 524800      activation_40[0][0]              
+____________________________________________________________________________________________________
+bn5a_branch2a (BatchNormalizatio (None, None, None, 51 2048        res5a_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_41 (Activation)       (None, None, None, 51 0           bn5a_branch2a[0][0]              
+____________________________________________________________________________________________________
+res5a_branch2b (Conv2D)          (None, None, None, 51 2359808     activation_41[0][0]              
+____________________________________________________________________________________________________
+bn5a_branch2b (BatchNormalizatio (None, None, None, 51 2048        res5a_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_42 (Activation)       (None, None, None, 51 0           bn5a_branch2b[0][0]              
+____________________________________________________________________________________________________
+res5a_branch2c (Conv2D)          (None, None, None, 20 1050624     activation_42[0][0]              
+____________________________________________________________________________________________________
+res5a_branch1 (Conv2D)           (None, None, None, 20 2099200     activation_40[0][0]              
+____________________________________________________________________________________________________
+bn5a_branch2c (BatchNormalizatio (None, None, None, 20 8192        res5a_branch2c[0][0]             
+____________________________________________________________________________________________________
+bn5a_branch1 (BatchNormalization (None, None, None, 20 8192        res5a_branch1[0][0]              
+____________________________________________________________________________________________________
+add_14 (Add)                     (None, None, None, 20 0           bn5a_branch2c[0][0]              
+                                                                   bn5a_branch1[0][0]               
+____________________________________________________________________________________________________
+activation_43 (Activation)       (None, None, None, 20 0           add_14[0][0]                     
+____________________________________________________________________________________________________
+res5b_branch2a (Conv2D)          (None, None, None, 51 1049088     activation_43[0][0]              
+____________________________________________________________________________________________________
+bn5b_branch2a (BatchNormalizatio (None, None, None, 51 2048        res5b_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_44 (Activation)       (None, None, None, 51 0           bn5b_branch2a[0][0]              
+____________________________________________________________________________________________________
+res5b_branch2b (Conv2D)          (None, None, None, 51 2359808     activation_44[0][0]              
+____________________________________________________________________________________________________
+bn5b_branch2b (BatchNormalizatio (None, None, None, 51 2048        res5b_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_45 (Activation)       (None, None, None, 51 0           bn5b_branch2b[0][0]              
+____________________________________________________________________________________________________
+res5b_branch2c (Conv2D)          (None, None, None, 20 1050624     activation_45[0][0]              
+____________________________________________________________________________________________________
+bn5b_branch2c (BatchNormalizatio (None, None, None, 20 8192        res5b_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_15 (Add)                     (None, None, None, 20 0           bn5b_branch2c[0][0]              
+                                                                   activation_43[0][0]              
+____________________________________________________________________________________________________
+activation_46 (Activation)       (None, None, None, 20 0           add_15[0][0]                     
+____________________________________________________________________________________________________
+res5c_branch2a (Conv2D)          (None, None, None, 51 1049088     activation_46[0][0]              
+____________________________________________________________________________________________________
+bn5c_branch2a (BatchNormalizatio (None, None, None, 51 2048        res5c_branch2a[0][0]             
+____________________________________________________________________________________________________
+activation_47 (Activation)       (None, None, None, 51 0           bn5c_branch2a[0][0]              
+____________________________________________________________________________________________________
+res5c_branch2b (Conv2D)          (None, None, None, 51 2359808     activation_47[0][0]              
+____________________________________________________________________________________________________
+bn5c_branch2b (BatchNormalizatio (None, None, None, 51 2048        res5c_branch2b[0][0]             
+____________________________________________________________________________________________________
+activation_48 (Activation)       (None, None, None, 51 0           bn5c_branch2b[0][0]              
+____________________________________________________________________________________________________
+res5c_branch2c (Conv2D)          (None, None, None, 20 1050624     activation_48[0][0]              
+____________________________________________________________________________________________________
+bn5c_branch2c (BatchNormalizatio (None, None, None, 20 8192        res5c_branch2c[0][0]             
+____________________________________________________________________________________________________
+add_16 (Add)                     (None, None, None, 20 0           bn5c_branch2c[0][0]              
+                                                                   activation_46[0][0]              
+____________________________________________________________________________________________________
+activation_49 (Activation)       (None, None, None, 20 0           add_16[0][0]                     
+____________________________________________________________________________________________________
+avg_pool (AveragePooling2D)      (None, None, None, 20 0           activation_49[0][0]              
+____________________________________________________________________________________________________
+global_average_pooling2d_1 (Glob (None, 2048)          0           avg_pool[0][0]                   
+____________________________________________________________________________________________________
+dense_1 (Dense)                  (None, 1)             2049        global_average_pooling2d_1[0][0] 
+====================================================================================================
+Total params: 23,589,761
+Trainable params: 2,049
+Non-trainable params: 23,587,712
+____________________________________________________________________________________________________
+None
+Epoch 1/3
+59/60 [============================&gt;.] - ETA: 52s - loss: 0.2344 - acc: 0.9049 Epoch 00000: val_loss improved from inf to 0.11207, saving model to ../input/anime_weights.h5
+60/60 [==============================] - 3774s - loss: 0.2333 - acc: 0.9052 - val_loss: 0.1121 - val_acc: 0.9674
+Epoch 2/3
+59/60 [============================&gt;.] - ETA: 52s - loss: 0.0858 - acc: 0.9745 Epoch 00001: val_loss improved from 0.11207 to 0.06089, saving model to ../input/anime_weights.h5
+60/60 [==============================] - 3663s - loss: 0.0849 - acc: 0.9750 - val_loss: 0.0609 - val_acc: 0.9821
+Epoch 3/3
+40/60 [===================&gt;..........] - ETA: 1015s - loss: 0.0660 - acc: 0.9824</pre></div></div><div class="slide"><div class="card"><h1 class="header">Model Results</h1></div><div class="card"><prism-demo code="model.evaluate_generator(test_generator, steps=10)"></prism-demo></div><div class="card"><p>[0.048907476166884102, 0.98999999920527137]</p></div></div><div class="slide"><div class="card"><h1 class="header">Transforming our models</h1></div><div class="card"><img src="lib/images/henshin.gif"></div></div><div class="slide"><div class="card"><h1 class="header">WebDNN</h1></div><div class="card"><p>WebDNN is an open source software framework for executing deep neural network (DNN) pre-trained model on web browser.</p></div></div><div class="slide"><div class="card"><h1 class="header">Transforming the model for the browser</h1></div><div class="card"><prism-demo code="python bin/convert_keras.py anime_weights.h5 --input_shape '(1,224,224,3)' --out output_keras"></prism-demo></div></div><div class="slide"><div class="card"><h1 class="header">That's it???</h1></div><div class="card"><img src="lib/images/sailor-moon.gif"></div></div><div class="slide"><div class="card"><h1 class="header">Combining our Model with our Web Components</h1></div><div class="card"><img src="lib/images/fusion.gif"></div></div><div class="slide"><my-view2></my-view2></div><div class="slide"><div class="card"><h1 class="header">Imageboard Code</h1></div><div class="card"><prism-demo code="<link rel=&quot;import&quot; href=&quot;../bower_components/polymer/polymer-element.html&quot;>
+<link rel=&quot;import&quot; href=&quot;shared-styles.html&quot;>
+<link rel=&quot;import&quot; href=&quot;anime-image-uploader.html&quot;>
+
+<dom-module id=&quot;my-view2&quot;>
+  <template>
+    <style include=&quot;shared-styles&quot;>
+      /* Applies only to this element */
+      :host {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      img {
+        min-width:290px;
+        min-height: 290px;
+      }
+      span {
+        font-weight: bold;
+        font-size: 2em;
+      }
+      /* Uses variables in CSS */
+      .pink-text {
+        color:var(--paper-pink-500);
+      }
+    </style>
+
+    <div class=&quot;card&quot;>
+      <span class=&quot;pink-text&quot;>Best AI Generated Waifu</span>
+    </div>
+    <!-- Iterate over images using templates-->
+    <template is=&quot;dom-repeat&quot; items=&quot;{{images}}&quot;>
+      <div class=&quot;card&quot;>
+        <img src=&quot;{{item}}&quot; />
+      </div>
+    </template>
+    <!-- Place the anime-image-uploader component -->
+    <div class=&quot;card&quot;>
+      <anime-image-uploader id=&quot;imageUploader&quot;></anime-image-uploader>
+    </div>
+    
+  </template>
+
+  <script>
+    // Define our Polymer Element
+    class MyView2 extends Polymer.Element {
+      //Define our tag name
+      static get is() { return &quot;my-view2&quot;; }
+      //Define the properties
+      static get properties() {
+        return {
+          imageUploaded: {
+            type: Boolean,
+            value: false
+          },
+          images: {
+            value: []
+          }
+        }
+      }
+      // Add event listeners during one-time initialization
+      ready() {
+        super.ready();
+        this.$.imageUploader.addEventListener(&quot;submitImage&quot;, (e)=> {
+          this.push(&quot;images&quot;, e.detail.imageData);
+        })
+      }
+    }
+    // Define the custom element for our view.
+    window.customElements.define(MyView2.is, MyView2);
+  </script>
+</dom-module>"></prism-demo></div></div><div class="slide"><div class="card"><h1 class="header">Upload Component Code</h1></div><div class="card"><prism-demo code="<link rel=&quot;import&quot; href=&quot;../bower_components/polymer/polymer-element.html&quot;>
+<link rel=&quot;import&quot; href=&quot;../bower_components/paper-button/paper-button.html&quot;>
+<link rel=&quot;import&quot; href=&quot;../bower_components/paper-progress/paper-progress.html&quot;>
+<link rel=&quot;import&quot; href=&quot;../bower_components/iron-icons/iron-icons.html&quot;>
+<link rel=&quot;import&quot; href=&quot;../bower_components/iron-icon/iron-icon.html&quot;>
+
+<script src=&quot;lib/webdnn.js&quot;></script>
+
+<link rel=&quot;import&quot; href=&quot;shared-styles.html&quot;>
+
+<dom-module id=&quot;anime-image-uploader&quot;>
+  <template>
+    <style include=&quot;shared-styles&quot;>
+      :host {
+        display:flex;
+        align-self: center;
+        align-items: center;
+        flex-flow:column;     
+      }
+
+      #imageCanvas {
+        margin-top:10px;
+        display:block;
+        height:224;
+        width:224;
+      }
+
+      paper-button {
+        margin: 5px;
+      }
+
+      paper-button.pink {
+        color: var(--paper-pink-500);
+        --paper-icon-button-ink-color: var(--paper-indigo-500);
+
+      }
+      paper-button.pink:hover {
+        background-color: var(--paper-pink-500);
+        color: white;
+      }
+
+      #imageLoader {
+        opacity:0; 
+        height:0px;
+        width:0px;
+      }
+      
+      paper-progress.pink {
+        --paper-progress-active-color: var(--paper-pink-500);
+        --paper-progress-secondary-color: var(--paper-pink-100);
+      }
+    </style>
+      <!-- Conditional Templates -->
+      <template is=&quot;dom-if&quot; if=&quot;{{!loaded}}&quot;>
+        <paper-progress value={{progress}} class=&quot;pink&quot;></paper-progress>
+      </template>
+      <template is=&quot;dom-if&quot; if=&quot;{{loaded}}&quot;>
+        <!-- Attaching event handlers to an element -->
+         <canvas id=&quot;imageCanvas&quot; height=&quot;{{height}}&quot; width=&quot;{{width}}&quot; on-submitImage=&quot;loaded&quot;></canvas>
+         <span>{{message}}</span>
+        <paper-button raised class=&quot;uploadButton pink&quot; on-click=&quot;triggerUpload&quot;>
+          <iron-icon icon=&quot;file-upload&quot;></iron-icon>
+          Upload 
+        </paper-button>
+        <input type=&quot;file&quot; id=&quot;imageLoader&quot; name=&quot;imageLoader&quot; on-change=&quot;loadImage&quot; accept=&quot;image/*&quot;/>
+       <template is=&quot;dom-if&quot; if=&quot;{{isAnime}}&quot;>
+        <paper-button raised on-click=&quot;submitImage&quot; class=&quot;pink&quot;>
+          <iron-icon icon=&quot;favorite&quot;></iron-icon>
+        </paper-button>
+       </template>
+      </template>
+  </template>
+
+  <script>
+    class AnimeImageUploader extends Polymer.Element {
+      static get is() { return &quot;anime-image-uploader&quot;; }
+      static get properties() {
+        return {
+          progress: {
+            type: Number,
+            value: 0
+          },
+          // Specifying how this property will be computed
+          loaded: {
+            type: Boolean,
+            computed: &quot;computeLoaded(progress)&quot;
+          },
+          imageData: {
+            type: String,
+            value:&quot;&quot;
+          },
+          animeProbability: {
+            type: Number,
+            value: 0
+          },
+          finishedComputing: {
+            type: Boolean,
+            value: false
+          },
+          firstTime: {
+            type: Boolean,
+            value: true
+          },
+          message: {
+            type: String,
+            computed: &quot;computeMessage(finishedComputing, animeProbability, firstTime)&quot;
+          },
+          isAnime: {
+            type: Boolean,
+            computed: &quot;computeIsAnime(message)&quot;
+          },
+          height: {
+            type: Number,
+            computed: &quot;computeHeight(imageData)&quot;
+          },
+          width: {
+            type: Number,
+            computed: &quot;computeWidth(imageData)&quot;
+          }
+        }
+      }
+      // Load our WebDNN Model when ready.
+      async ready() {
+        super.ready();
+        this.runner = await WebDNN.load(&quot;lib/output_keras&quot;, {
+            progressCallback: (loaded, total) => this.set(&quot;progress&quot;, 100*loaded/total)
+        });
+      }
+      // Computing for computed properties
+      computeLoaded (progress) {
+        return progress == 100;
+      }
+
+      computeHeight (imageData) {
+        return imageData == &quot;&quot; ? 0 : 224;
+      }
+
+      computeWidth (imageData) {
+        return imageData == &quot;&quot; ? 0 : 224;
+      }
+
+      computeMessage(finishedComputing, animeProbability, firstTime) {
+        if (firstTime) {
+          return &quot;&quot;;
+        }
+        if (!finishedComputing) {
+          return &quot;Doing some deep thinking...&quot;;
+        }
+        if (finishedComputing) {
+          return animeProbability > 0.5 ? &quot;Ah, I see you’re a man of culture as well&quot; : &quot;ANIME JA NAI!!!&quot;;
+        }
+      }
+
+      computeIsAnime(message) {
+        return message == &quot;Ah, I see you’re a man of culture as well&quot;;
+      }
+
+      triggerUpload() {
+        this.shadowRoot.querySelector(&quot;#imageLoader&quot;).click()
+      }
+      // loading image from file
+      async getImageFromFile(image) {
+          return new Promise((resolve, reject) => {
+              let reader = new FileReader();
+
+              reader.onload = (event) => {
+                  resolve(event.target.result);
+              };
+              reader.readAsDataURL(image);
+          });
+      }
+      //let my-view2 know the image that has been uploaded and set the relevant state to trigger the observers.
+      submitImage() {
+          let event = new CustomEvent(&quot;submitImage&quot;, {
+            bubbles: true, 
+            composed: true, 
+            detail: {
+              imageData: this.imageData
+            }
+          });
+          this.dispatchEvent(event);
+          this.set(&quot;imageData&quot;, &quot;&quot;);
+          this.set(&quot;firstTime&quot;, true);
+      }
+      // load Image to canvas and trigger observers
+      async loadImage(e) {
+          let dataURL = await this.getImageFromFile(e.target.files[0]);
+          this.set(&quot;imageData&quot;, dataURL);
+          let imageData = await WebDNN.Image.getImageArray(dataURL, {dstW: 224, dstH: 224});
+
+          WebDNN.Image.setImageArrayToCanvas(imageData, 224, 224, this.shadowRoot.querySelector(&quot;#imageCanvas&quot;));
+          this.set(&quot;firstTime&quot;, false);
+          
+          this.run()
+      }
+      // Compute for the probability it is anime and set the relevant properties to trigger observers.
+      async run() {
+          this.runner.getInputViews()[0].set(await WebDNN.Image.getImageArray(this.shadowRoot.querySelector(&quot;#imageCanvas&quot;), {
+              order: WebDNN.Image.Order.HWC,
+              color: WebDNN.Image.Color.BGR,
+              bias: [123.68, 116.779, 103.939]
+          }));
+
+          this.set(&quot;finishedComputing&quot;, false);
+          this.set(&quot;animeProbability&quot;, 0);
+          await this.runner.run();
+          let out_vec = this.runner.getOutputViews()[0].toActual();
+          this.set(&quot;animeProbability&quot;, out_vec[0]);
+          this.set(&quot;finishedComputing&quot;, true)
+      }
+
+    }
+
+    window.customElements.define(AnimeImageUploader.is, AnimeImageUploader);
+  </script>
+</dom-module>"></prism-demo></div></div><div class="slide"><my-view2></my-view2></div><div class="slide"><div class="card"><h1 class="header">Why Deploy with Web Components?</h1></div><div class="card"><img src="lib/images/man-of-culture.jpg"></div></div><div class="slide"><div class="card"><h1 class="header">Homework</h1></div><div class="card"><ul><li>Distinguish between anime and cartoon</li><li>Male vs Female anime character(beware the traps)</li><li>Modify the anime uploader component to make an IRL photo site</li><li>Refactor this presentation</li><li>Publish your web component</li></ul></div></div><div class="slide"><div class="card"><h1 class="header">Thank You</h1></div><div class="card"><h2>If you're too shy to ask, you may contact me at:</h2><ul><li>Work Email: {{workEmail}}</li><li>Personal Email: {{personalEmail}}</li></ul></div></div><div class="nav-buttons"><paper-fab icon="arrow-back" on-click="prev" class="fixed-left"></paper-fab><paper-fab icon="arrow-forward" on-click="next" class="fixed-right"></paper-fab></div></template><script>class SlideShow extends Polymer.Element{static get is(){return"slide-show"}ready(){super.ready(),window.addEventListener("keyup",a=>{37==a.keyCode||38==a.keyCode||8==a.keyCode||46==a.keyCode?this.prev():(39==a.keyCode||40==a.keyCode||32==a.keyCode)&&this.next()})}static get properties(){return{workEmail:{type:String,value:"kenley.tan@mynt.xyz"},personalEmail:{type:String,value:"kenleytan@yahoo.com"}}}prev(){this.scrollLeft-=window.innerWidth,document.scrollingElement.scrollTop=0}next(){this.scrollLeft+=window.innerWidth,document.scrollingElement.scrollTop=0}}window.customElements.define(SlideShow.is,SlideShow);</script></dom-module></body></html>
